@@ -2,33 +2,45 @@ from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-# Fake user data (later we will move this to a database)
-users = {
-    "kennedy": {"password": "1234", "balance": 5000},
-    "toby": {"password": "abcd", "balance": 3000}
-}
+# Temporary storage (later we will use a database)
+users = {}
 
-@app.route("/")
+@app.route('/')
 def home():
-    return "Welcome to Kennedy Banking Demo! <a href='/login'>Login here</a>"
+    return redirect(url_for('login'))
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        if username in users and users[username]["password"] == password:
-            return redirect(url_for("dashboard", user=username))
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        if username in users and users[username] == password:
+            return f"Welcome {username}!"
         else:
-            return "Invalid credentials! <a href='/login'>Try again</a>"
-    return render_template("login.html")
+            return "Invalid username or password"
+    
+    return render_template('login.html')
 
-@app.route("/dashboard/<user>")
-def dashboard(user):
-    if user in users:
-        balance = users[user]["balance"]
-        return render_template("dashboard.html", user=user, balance=balance)
-    return "User not found"
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm = request.form['confirm_password']
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+        if password != confirm:
+            return "Passwords do not match"
+        
+        if username in users:
+            return "Username already exists"
+        
+        # Save user
+        users[username] = password
+        return redirect(url_for('login'))
+
+    return render_template('signup.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
